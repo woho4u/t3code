@@ -2882,6 +2882,18 @@ export default function ChatView(props: ChatViewProps) {
     setUsageLimitsPanel(null);
   }
   const usageLimitSources = serverConfig?.usageLimitSources ?? EMPTY_USAGE_LIMIT_SOURCES;
+  const liveUsageLimitsReport = useMemo(
+    () =>
+      activeProviderInstanceId !== null
+        ? collectProviderUsageLimits(
+            activeProviderInstanceId,
+            providerStatuses,
+            usageLimitSources,
+            Date.now(),
+          )
+        : null,
+    [activeProviderInstanceId, providerStatuses, usageLimitSources],
+  );
   const usageLimitsReport = useMemo(
     () =>
       usageLimitsPanel !== null &&
@@ -8959,6 +8971,7 @@ export default function ChatView(props: ChatViewProps) {
                             activeProjectDefaultModelSelection={activeProjectDefaultModelSelection}
                             activeThreadModelSelection={activeThread?.modelSelection}
                             activeContextWindow={activeContextWindow}
+                            activeUsageLimitsReport={liveUsageLimitsReport}
                             compactThreadUnavailable={compactThreadUnavailable}
                             compactDisabled={compactDisabled}
                             compactDisabledReason={compactDisabledReason}

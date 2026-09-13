@@ -1,6 +1,9 @@
+import type { UsageLimitsReport } from "@t3tools/contracts";
+import { remainingPercent } from "@t3tools/shared/usageLimits";
 import { Button } from "../ui/button";
 import { type ContextWindowSnapshot, formatContextWindowTokens } from "~/lib/contextWindow";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
+import { LimitWindows } from "../usage/UsageLimits";
 import { formatContextWindowCompactionMessage } from "./ContextWindowMeter.logic";
 import { Minimize2Icon } from "lucide-react";
 import { composerFloatingLayerProps } from "./composerEventScope";
@@ -17,12 +20,20 @@ function formatPercentage(value: number | null): string | null {
 
 export function ContextWindowMeter(props: {
   usage: ContextWindowSnapshot;
+  usageLimits?: UsageLimitsReport | null;
   modelDisplayName?: string | null;
   onCompact?: (() => void) | undefined;
   compactDisabled?: boolean | undefined;
   compactDisabledReason?: string | null | undefined;
 }) {
-  const { usage, modelDisplayName, onCompact, compactDisabled, compactDisabledReason } = props;
+  const {
+    usage,
+    usageLimits = null,
+    modelDisplayName,
+    onCompact,
+    compactDisabled,
+    compactDisabledReason,
+  } = props;
   const usedPercentage = formatPercentage(usage.usedPercentage);
   const normalizedPercentage = Math.max(0, Math.min(100, usage.usedPercentage ?? 0));
   const radius = 9.75;
@@ -34,6 +45,16 @@ export function ContextWindowMeter(props: {
   const usageColor = isOverloaded
     ? "var(--color-error)"
     : "color-mix(in oklab, var(--color-muted-foreground) 72%, transparent)";
+  const primaryLimits = usageLimits?.accounts[0]?.limits.windows ?? [];
+  const visibleLimits = [
+    primaryLimits.find((window) => window.kind === "session"),
+    primaryLimits.find((window) => window.kind === "weekly"),
+  ].filter((window) => window !== undefined);
+  const latestTurnTokens =
+    usage.lastUsedTokens ??
+    (usage.lastInputTokens ?? 0) +
+      (usage.lastOutputTokens ?? 0) +
+      (usage.lastReasoningOutputTokens ?? 0);
 
   return (
     <Popover>
@@ -43,9 +64,9 @@ export function ContextWindowMeter(props: {
         closeDelay={onCompact ? 150 : 0}
         render={
           <Button
-            size="icon-sm"
+            size="sm"
             variant="ghost-muted"
-            className="size-7 rounded-full hover:text-muted-foreground data-pressed:text-muted-foreground"
+            className="h-7 gap-1.5 rounded-full px-1.5 font-normal hover:text-muted-foreground data-pressed:text-muted-foreground"
             aria-label={
               usage.maxTokens !== null && usedPercentage
                 ? `Context window ${usedPercentage} used`
@@ -80,6 +101,19 @@ export function ContextWindowMeter(props: {
                 />
               </svg>
             </span>
+            <span className="text-[10px] tabular-nums">
+              Ctx {usedPercentage ?? formatContextWindowTokens(usage.usedTokens)}
+            </span>
+            {latestTurnTokens > 0 ? (
+              <span className="text-[10px] text-secondary-label tabular-nums">
+                Msg {formatContextWindowTokens(latestTurnTokens)}
+              </span>
+            ) : null}
+            {visibleLimits.map((window) => (
+              <span key={`${window.kind}:${window.id}`} className="text-[10px] tabular-nums">
+                {window.kind === "session" ? "5h" : "Wk"} {remainingPercent(window)}%
+              </span>
+            ))}
           </Button>
         }
       />
@@ -89,7 +123,7 @@ export function ContextWindowMeter(props: {
         side="top"
         align="end"
         viewportClassName="p-0"
-        className="w-64 max-w-none text-left whitespace-normal"
+        className="w-80 max-w-none text-left whitespace-normal"
       >
         <div className="flex flex-col gap-2 p-[var(--floating-content-inset)]">
           <div className="flex items-center justify-between gap-3">
@@ -130,6 +164,50 @@ export function ContextWindowMeter(props: {
               <span className="font-medium tabular-nums text-secondary-label">
                 {formatContextWindowTokens(totalProcessedTokens)}
               </span>
+            </div>
+          ) : null}
+          {latestTurnTokens > 0 ? (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 border-t border-border/60 pt-2 text-[11px] leading-4">
+              <span className="col-span-2 font-medium text-muted-foreground">Latest message</span>
+              <span className="text-secondary-label">Total</span>
+              <span className="text-right font-medium tabular-nums text-secondary-label">
+                {formatContextWindowTokens(latestTurnTokens)}
+              </span>
+              <span className="text-secondary-label">Input / cached</span>
+              <span className="text-right font-medium tabular-nums text-secondary-label">
+                {formatContextWindowTokens(usage.lastInputTokens ?? null)}/
+                {formatContextWindowTokens(usage.lastCachedInputTokens ?? null)}
+              </span>
+              <span className="text-secondary-label">Output / reasoning</span>
+              <span className="text-right font-medium tabular-nums text-secondary-label">
+                {formatContextWindowTokens(usage.lastOutputTokens ?? null)}/
+                {formatContextWindowTokens(usage.lastReasoningOutputTokens ?? null)}
+              </span>
+            </div>
+          ) : null}
+          {usageLimits && (usageLimits.accounts.length > 0 || usageLimits.notices.length > 0) ? (
+            <div className="flex flex-col gap-2 border-t border-border/60 pt-2">
+              <span className="font-medium text-muted-foreground text-xs">Provider limits</span>
+              {usageLimits.accounts.map((account) => (
+                <div key={account.id} className="flex min-w-0 flex-col gap-1">
+                  {usageLimits.accounts.length > 1 ? (
+                    <span className="truncate text-[11px] text-secondary-label">
+                      {account.displayName?.trim() || account.label}
+                    </span>
+                  ) : null}
+                  <LimitWindows
+                    compact
+                    driver={account.driver}
+                    windows={account.limits.windows}
+                    now={Date.parse(usageLimits.createdAt)}
+                  />
+                </div>
+              ))}
+              {usageLimits.notices.map((notice) => (
+                <span key={notice} className="text-[11px] text-secondary-label">
+                  {notice}
+                </span>
+              ))}
             </div>
           ) : null}
           {usage.compactsAutomatically ? (
