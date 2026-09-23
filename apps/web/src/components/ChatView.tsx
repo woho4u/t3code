@@ -2948,6 +2948,19 @@ export default function ChatView(props: ChatViewProps) {
     usageLimitsKey,
   ]);
   // Responses can resolve after navigating away; only the originating thread's panel clears.
+  const toggleUsageLimits = useCallback(() => {
+    // Clicking the composer chip (or repeating /usage-limits) flips the panel:
+    // open when closed, collapsed when open for the current selection.
+    if (
+      usageLimitsPanel !== null &&
+      usageLimitsKey !== null &&
+      usageLimitsPanel.key === usageLimitsKey
+    ) {
+      setUsageLimitsPanel(null);
+      return true;
+    }
+    return openUsageLimits();
+  }, [openUsageLimits, usageLimitsKey, usageLimitsPanel]);
   const clearUsageLimitsFor = useCallback(
     (threadKey: string) =>
       setUsageLimitsPanel((current) =>
@@ -6789,7 +6802,7 @@ export default function ChatView(props: ChatViewProps) {
       !composerHasNonPromptContent &&
       isUsageLimitsCommand(promptRef.current)
     ) {
-      if (openUsageLimits()) {
+      if (toggleUsageLimits()) {
         promptRef.current = "";
         setComposerDraftPrompt(composerDraftTarget, "");
         composerRef.current?.resetCursorState();
@@ -8933,7 +8946,7 @@ export default function ChatView(props: ChatViewProps) {
                               usageLimitsOffered &&
                               usageLimitsKey !== null &&
                               !composerHasNonPromptContent
-                                ? openUsageLimits
+                                ? toggleUsageLimits
                                 : undefined
                             }
                             activeProviderUsageLimits={
