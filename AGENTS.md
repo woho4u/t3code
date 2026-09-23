@@ -53,8 +53,13 @@ Any agent session opening this folder follows this file.
   `STATE.md`).
 - Installing overwrites `AppData\Local\Programs\t3code`. Owner data lives in
   `~/.t3/userdata` (outside the app) and survives reinstalls.
-- The owner closes T3 Code before the installer runs; agent sessions may be
-  running inside the app and will end with it.
+- **Silent update ritual (default)**: after building, arm the updater detached:
+  `Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','<root>\Automation\t3code-apply-update\apply-update.ps1' -WindowStyle Hidden`
+  (newest installer in `release\` used by default; pass `-InstallerPath` to
+  pin one). The updater waits for T3 Code to exit, installs with `/S`, and
+  relaunches the app. The owner's only action is closing T3 Code; agent
+  sessions running inside the app end with it.
+- A plain manual run of the installer still works whenever the owner prefers.
 
 ## Never
 

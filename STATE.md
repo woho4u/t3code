@@ -47,4 +47,6 @@ rules: `AGENTS.md`.
 
 ## Next action
 
-- Build the installer, owner installs over the current app.
+- Owner runs the pending `0.0.43` installer (silent updater
+  `Automation/t3code-apply-update/apply-update.ps1` is armed to apply it when
+  T3 Code closes).
