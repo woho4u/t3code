@@ -21,13 +21,17 @@ rules: `AGENTS.md`.
      left of the attach/send buttons (expanded footer only). Click opens the
      same usage-limits panel the `/usage-limits` command uses.
    - Works for any provider publishing windows (codex, opencode, claude).
+3. `a77feea0` feat(web): composer usage-limits chip toggles the panel
+   - Clicking the chip (or repeating `/usage-limits`) collapses the open panel
+     for the current selection; clicking again reopens it.
 
 ## Last sync / build
 
 - Official sync point: upstream `main` `6e5e986f` (2026-09-13) — the same commit
   the installed `0.0.41-personal.20260913.2046` app was built from.
-- Installer (2026-09-23, owner not yet installed at last update):
-  `release\T3-Code-0.0.42-personal.20260923.1-x64.exe` (NSIS, x64).
+- Installer (latest, 2026-09-23):
+  `release\T3-Code-0.0.43-personal.20260923.1-x64.exe` (NSIS, x64; includes the
+  toggle tweak). Earlier: `T3-Code-0.0.42-personal.20260923.1-x64.exe`.
 - Build-environment notes (both needed for `dist:desktop:win` on this machine):
   - VS 2022 Community: `Microsoft.VisualStudio.Component.VC.Runtimes.x86.x64.Spectre`
     installed 2026-09-23 (was missing).
