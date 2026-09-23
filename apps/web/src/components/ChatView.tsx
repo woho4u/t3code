@@ -8936,6 +8936,14 @@ export default function ChatView(props: ChatViewProps) {
                                 ? openUsageLimits
                                 : undefined
                             }
+                            activeProviderUsageLimits={
+                              usageLimitsOffered &&
+                              activeProviderStatus?.usageLimits !== undefined &&
+                              activeProviderStatus.usageLimits.windows.length > 0 &&
+                              activeProviderStatus.usageLimits.unavailable === undefined
+                                ? activeProviderStatus.usageLimits
+                                : null
+                            }
                             environmentUnavailable={activeEnvironmentUnavailableState}
                             activePendingApproval={activePendingApproval}
                             pendingApprovals={pendingApprovals}

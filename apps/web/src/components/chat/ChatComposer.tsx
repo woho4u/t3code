@@ -39,6 +39,7 @@ import {
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
 } from "@t3tools/contracts";
 import type { EnvironmentConnectionPresentation } from "@t3tools/client-runtime/connection";
+import type { ServerProviderUsageLimits } from "@t3tools/contracts";
 import {
   isPasteAsTextShortcut,
   nextPastedTextFileName,
@@ -919,6 +920,7 @@ function ComposerCommandMenuLayer(props: { anchor: HTMLElement | null; children:
 import { Button } from "../ui/button";
 import { Select, SelectItem, SelectPopup, SelectValue } from "../ui/select";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
+import { ComposerUsageLimitsInline } from "./ComposerUsageLimitsInline";
 import { toastManager } from "../ui/toast";
 import {
   FileIcon,
@@ -1306,6 +1308,8 @@ export interface ChatComposerProps {
   bannerItems: readonly ComposerBannerStackItem[];
   /** Picking /usage-limits from the menu is the action itself; the draft keeps nothing of it. */
   onUsageLimitsCommand?: (() => void) | undefined;
+  /** The selected provider's subscription limits for the inline footer control; null hides it. */
+  activeProviderUsageLimits?: ServerProviderUsageLimits | null;
   environmentUnavailable: {
     readonly label: string;
     readonly connection: EnvironmentConnectionPresentation;
@@ -6741,6 +6745,15 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                   }
                   className="flex shrink-0 flex-nowrap items-center justify-end gap-2"
                 >
+                  {!composerControlsInStrip &&
+                  props.activeProviderUsageLimits &&
+                  props.onUsageLimitsCommand ? (
+                    <ComposerUsageLimitsInline
+                      limits={props.activeProviderUsageLimits}
+                      now={Date.now()}
+                      onOpen={props.onUsageLimitsCommand}
+                    />
+                  ) : null}
                   {showComposerAttachAction ? (
                     <>
                       <input
