@@ -26,7 +26,16 @@ rules: `AGENTS.md`.
 
 - Official sync point: upstream `main` `6e5e986f` (2026-09-13) — the same commit
   the installed `0.0.41-personal.20260913.2046` app was built from.
-- Installer builds: pending (first build this session; path recorded here when built).
+- Installer (2026-09-23, owner not yet installed at last update):
+  `release\T3-Code-0.0.42-personal.20260923.1-x64.exe` (NSIS, x64).
+- Build-environment notes (both needed for `dist:desktop:win` on this machine):
+  - VS 2022 Community: `Microsoft.VisualStudio.Component.VC.Runtimes.x86.x64.Spectre`
+    installed 2026-09-23 (was missing).
+  - Fixed 2026-09-23: HKLM `KitsRoot10` pointed at a partial SDK copy
+    (`C:\Program Files\Windows Kits\10\`, no `Lib`); corrected to the standard
+    `C:\Program Files (x86)\Windows Kits\10\` (real SDK, Lib 10.0.26100.0).
+  - WSL backend is not bundled (no Linux node-pty prebuild provided); WSL
+    sessions won't start from the packaged app until one is provided.
 
 ## Unresolved
 
