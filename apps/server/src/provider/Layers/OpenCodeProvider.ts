@@ -27,6 +27,7 @@ import {
 } from "../opencodeRuntime.ts";
 import type { Agent, ProviderListResponse } from "@opencode-ai/sdk/v2";
 import * as OpenCodeServerOwner from "../OpenCodeServerOwner.ts";
+import { probeOpenCodeUsageLimits } from "./opencodeUsageLimits.ts";
 
 const OPENCODE_PRESENTATION = {
   displayName: "OpenCode",
@@ -520,6 +521,12 @@ export const checkOpenCodeProviderStatus = Effect.fn("checkOpenCodeProviderStatu
   );
   const skills = openCodeSkillsToServerProviderSkills(inventoryExit.value.inventory.skills);
   const connectedCount = inventoryExit.value.inventory.providerList.connected.length;
+  // The Zen subscription read is best-effort: a machine without an
+  // `opencode-go` auth entry simply has no limits row, and a failed read
+  // publishes `probeFailed` rather than failing the provider probe.
+  const usageLimits = yield* Effect.promise(() =>
+    probeOpenCodeUsageLimits({ checkedAt, environment: resolvedEnvironment }),
+  );
   return buildServerProvider({
     presentation: OPENCODE_PRESENTATION,
     enabled: true,
@@ -535,6 +542,7 @@ export const checkOpenCodeProviderStatus = Effect.fn("checkOpenCodeProviderStatu
         status: connectedCount > 0 ? "authenticated" : "unknown",
         type: "opencode",
       },
+      ...(usageLimits ? { usageLimits } : {}),
       message:
         connectedCount > 0
           ? `${connectedCount} upstream provider${connectedCount === 1 ? "" : "s"} connected through ${isExternalServer ? "the configured OpenCode server" : "OpenCode"}.`
